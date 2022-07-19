@@ -1,6 +1,6 @@
 package com.bignerdranch.android.test2
 
-data class NewsItem(
+data class News(
     var source: String = "",
     var title: String = "",
     var description: String = "",
