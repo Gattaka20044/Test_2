@@ -1,5 +1,7 @@
 package com.bignerdranch.android.test2
 
+import android.annotation.SuppressLint
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
@@ -7,16 +9,19 @@ import com.bignerdranch.android.test2.databinding.NewsItemBinding
 
 class NewsAdapter: RecyclerView.Adapter<NewsAdapter.NewsHolder>(){
 
+    val newsList = ArrayList<News>()
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsHolder {
-        TODO("Not yet implemented")
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.news_item, parent, false)
+        return NewsHolder(view)
     }
 
     override fun onBindViewHolder(holder: NewsHolder, position: Int) {
-        TODO("Not yet implemented")
+        holder.bind((newsList[position]))
     }
 
     override fun getItemCount(): Int {
-        TODO("Not yet implemented")
+        return newsList.size
     }
 
     class NewsHolder(item: View): RecyclerView.ViewHolder(item) {
@@ -26,5 +31,11 @@ class NewsAdapter: RecyclerView.Adapter<NewsAdapter.NewsHolder>(){
             title.text = "title"
         }
 
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun addNews(news: News){
+        newsList.add(news)
+        //notifyDataSetChanged()
     }
 }
