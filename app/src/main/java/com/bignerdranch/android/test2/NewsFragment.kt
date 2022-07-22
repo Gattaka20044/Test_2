@@ -14,6 +14,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bignerdranch.android.test2.api.NewsApi
 import com.bignerdranch.android.test2.databinding.NewsFragmentBinding
+import com.bignerdranch.android.test2.databinding.NewsItemBinding
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -58,19 +59,28 @@ class NewsFragment : Fragment() {
         return binding.root
     }
 
-    private class NewsHolder(itemTextView: TextView) : RecyclerView.ViewHolder(itemTextView) {
-        val bindTitle: (CharSequence) -> Unit = itemTextView::setText
+    private class NewsHolder(item: View) : RecyclerView.ViewHolder(item) {
+        val bindingClass = NewsItemBinding.bind(item)
+        fun bind(news: NewsItem) = with(bindingClass) {
+            title.text = news.title
+            author.text = news.author
+            data.text = news.data
+            description.text = news.description
+        }
+        //val bindTitle: (CharSequence) -> Unit = itemTextView::setText
     }
 
     private class NewsAdapter(private val newsItems: List<NewsItem>) : RecyclerView.Adapter<NewsHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsHolder {
-            val textView = TextView(parent.context)
-            return NewsHolder(textView)
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.news_item, parent, false)
+            //val textView = TextView(parent.context)
+            return NewsHolder(view)
         }
 
         override fun onBindViewHolder(holder: NewsHolder, position: Int) {
-            val newsItem = newsItems[position]
-            holder.bindTitle(newsItem.title)
+            holder.bind(newsItems[position])
+        //val newsItem = newsItems[position]
+           // holder.bindTitle(newsItem.title)
         }
 
         override fun getItemCount(): Int = newsItems.size
