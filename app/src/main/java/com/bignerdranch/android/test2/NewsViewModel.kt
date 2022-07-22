@@ -5,9 +5,9 @@ import androidx.lifecycle.ViewModel
 
 class NewsViewModel : ViewModel() {
 
-    val newsItemLiveData: LiveData<List<NewsItem>>
+    val newsItemViewModel: LiveData<List<NewsItem>>
 
     init {
-        newsItemLiveData = NewsFetch().fetchNews()
+        newsItemViewModel = NewsFetch().fetchNews()
     }
 }

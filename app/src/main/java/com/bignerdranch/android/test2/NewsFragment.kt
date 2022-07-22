@@ -7,64 +7,73 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentContainer
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bignerdranch.android.test2.api.NewsApi
 import com.bignerdranch.android.test2.databinding.NewsFragmentBinding
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 private const val TAG = "NewsFragment"
 
 class NewsFragment : Fragment() {
 
-    lateinit var binding: NewsFragmentBinding
+    private lateinit var binding: NewsFragmentBinding
+
     private lateinit var newsViewModel: NewsViewModel
     private lateinit var newsRecyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+
         newsViewModel = ViewModelProviders.of(this).get(NewsViewModel::class.java)
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
-        val view = inflater.inflate(R.layout.news_fragment, container, false)
-
-        newsRecyclerView = view.findViewById(R.id.recyclerNews)
-        newsRecyclerView.layoutManager = LinearLayoutManager(context)
-
-        return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        newsViewModel.newsItemLiveData.observe(
+        newsViewModel.newsItemViewModel.observe(
             viewLifecycleOwner,
-            Observer { newsItem ->
-                Log.d(TAG, "Have news items from view model $newsItem")
-                newsRecyclerView.adapter = NewsAdapter(newsItem)
-            }
-        )
+            Observer {
+                //Log.d(TAG, "Have gallery items from ViewModel $it")
+                newsRecyclerView.adapter = NewsAdapter(it)
+                // Обновить данные, поддерживающие представление утилизатора
+            })
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+
+        binding = NewsFragmentBinding.inflate(inflater)
+        //val view = inflater.inflate(R.layout.news_fragment, container, false)
+
+        newsRecyclerView = binding.recyclerNews
+        newsRecyclerView.layoutManager = LinearLayoutManager(context)
+
+        return binding.root
     }
 
     private class NewsHolder(itemTextView: TextView) : RecyclerView.ViewHolder(itemTextView) {
         val bindTitle: (CharSequence) -> Unit = itemTextView::setText
     }
 
-    private class NewsAdapter(private val newsItem: List<NewsItem>) : RecyclerView.Adapter<NewsHolder>() {
+    private class NewsAdapter(private val newsItems: List<NewsItem>) : RecyclerView.Adapter<NewsHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsHolder {
             val textView = TextView(parent.context)
             return NewsHolder(textView)
         }
 
         override fun onBindViewHolder(holder: NewsHolder, position: Int) {
-            val newsItem = newsItem[position]
+            val newsItem = newsItems[position]
             holder.bindTitle(newsItem.title)
         }
 
-        override fun getItemCount(): Int = newsItem.size
+        override fun getItemCount(): Int = newsItems.size
 
     }
 
@@ -72,16 +81,3 @@ class NewsFragment : Fragment() {
         fun newInstance() = NewsFragment()
     }
 }
-/*
-private fun init() {
-    binding.apply {
-        recyclerNews.layoutManager = LinearLayoutManager(this@MainActivity)
-        recyclerNews.adapter = adapter
-        for (i in 1..8) {
-            val news = NewsItem("News $i")
-            adapter.addNews(news)
-        }
-    }
-}
-
- */

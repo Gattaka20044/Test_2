@@ -3,15 +3,20 @@ package com.bignerdranch.android.test2
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import com.bignerdranch.android.test2.api.ArticlesResponse
 import com.bignerdranch.android.test2.api.NewsApi
-import com.bignerdranch.android.test2.api.NewsData
 import com.bignerdranch.android.test2.api.NewsResponse
-import retrofit2.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 
 private const val TAG = "NewsFetch"
 
 class NewsFetch {
+
     private val newsApi: NewsApi
 
     init {
@@ -25,25 +30,24 @@ class NewsFetch {
 
     fun fetchNews(): LiveData<List<NewsItem>> {
         val responseLiveData: MutableLiveData<List<NewsItem>> = MutableLiveData()
-        val newsRequest: Call<NewsResponse> = newsApi.fetchNews()
+        val newsRequest: Call<ArticlesResponse> = newsApi.fetchNews()
 
-        newsRequest.enqueue(object : Callback<NewsResponse> {
-            override fun onFailure(call: Call<NewsResponse>, t: Throwable) {
-                Log.e(TAG, "Failed to fetch photos", t)
+        newsRequest.enqueue(object : Callback<ArticlesResponse> {
+            override fun onFailure(call: Call<ArticlesResponse>, t: Throwable) {
+                Log.e(TAG, "Failed", t)
             }
 
-            override fun onResponse(call: Call<NewsResponse>, response: Response<NewsResponse>) {
-                Log.d(TAG, "Response received")
-                val newsResponse: NewsResponse? = response.body()
-                val newsDataResponse: NewsData? = newsResponse?.news
-                var newsItems: List<NewsItem> = newsDataResponse?.newsItems ?: mutableListOf()
-                newsItems = newsItems.filterNot {
-                    it.url.isBlank()
-                }
+            override fun onResponse(call: Call<ArticlesResponse>, response: Response<ArticlesResponse>) {
+                Log.d(TAG, "Received")
+                val newsResponse: ArticlesResponse? = response.body()
+               // val articlesResponse: ArticlesResponse? = newsResponse?.status
+                var newsItems: List<NewsItem> = newsResponse?.newsItems
+                    ?: mutableListOf()
+
                 responseLiveData.value = newsItems
             }
         })
-
         return responseLiveData
     }
+
 }

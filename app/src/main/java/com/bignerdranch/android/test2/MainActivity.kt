@@ -25,16 +25,3 @@ class MainActivity : AppCompatActivity() {
 
 
 }
-/*
-private fun init() {
-    binding.apply {
-        recyclerNews.layoutManager = LinearLayoutManager(this@MainActivity)
-        recyclerNews.adapter = adapter
-        for (i in 1..8) {
-            val news = NewsItem("News $i")
-            adapter.addNews(news)
-        }
-    }
-}
-
- */
