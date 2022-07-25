@@ -1,10 +1,13 @@
 package com.bignerdranch.android.test2
 
+import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.LiveData
@@ -29,12 +32,26 @@ class NewsFragment : Fragment() {
 
     private lateinit var newsViewModel: NewsViewModel
     private lateinit var newsRecyclerView: RecyclerView
+    private lateinit var thumbnailDownloader: ThumbnailDownloader<NewsHolder>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        retainInstance = true
 
         newsViewModel = ViewModelProviders.of(this).get(NewsViewModel::class.java)
+        val responseHandler = Handler()
+        thumbnailDownloader = ThumbnailDownloader(responseHandler) { newsHolder, bitmap ->
+            val drawable = BitmapDrawable(resources, bitmap) as ImageView
+            newsHolder.bindingClass.imageView = BitmapDrawable(resources, bitmap)
+        }
+        lifecycle.addObserver(thumbnailDownloader)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        lifecycle.removeObserver(thumbnailDownloader)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -70,7 +87,7 @@ class NewsFragment : Fragment() {
         //val bindTitle: (CharSequence) -> Unit = itemTextView::setText
     }
 
-    private class NewsAdapter(private val newsItems: List<NewsItem>) : RecyclerView.Adapter<NewsHolder>() {
+    private inner class NewsAdapter(private val newsItems: List<NewsItem>) : RecyclerView.Adapter<NewsHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsHolder {
             val view = LayoutInflater.from(parent.context).inflate(R.layout.news_item, parent, false)
             //val textView = TextView(parent.context)
@@ -79,6 +96,8 @@ class NewsFragment : Fragment() {
 
         override fun onBindViewHolder(holder: NewsHolder, position: Int) {
             holder.bind(newsItems[position])
+
+            thumbnailDownloader.queueThumbnail(holder, newsItems[position].urlToImage)
         //val newsItem = newsItems[position]
            // holder.bindTitle(newsItem.title)
         }

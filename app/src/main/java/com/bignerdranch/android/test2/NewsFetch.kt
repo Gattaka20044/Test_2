@@ -1,11 +1,15 @@
 package com.bignerdranch.android.test2
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
+import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.bignerdranch.android.test2.api.ArticlesResponse
 import com.bignerdranch.android.test2.api.NewsApi
 import com.bignerdranch.android.test2.api.NewsResponse
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -48,6 +52,14 @@ class NewsFetch {
             }
         })
         return responseLiveData
+    }
+
+    @WorkerThread
+    fun fetchPhoto(url: String): Bitmap? {
+        val response: Response<ResponseBody> = newsApi.funUrlBytes(url).execute()
+        val bitmap = response.body()?.byteStream()?.use(BitmapFactory::decodeStream)
+        Log.i(TAG, "Decoded $bitmap from $response")
+        return bitmap
     }
 
 }
