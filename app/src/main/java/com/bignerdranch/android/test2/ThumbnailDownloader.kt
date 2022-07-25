@@ -64,5 +64,14 @@ class ThumbnailDownloader<in T>(private val responseHandler: Handler, private va
     private fun handleRequest(target: T) {
         val url = requestMap[target] ?: return
         val bitmap = newsFetch.fetchPhoto(url) ?: return
+
+        responseHandler.post(Runnable {
+            if (requestMap[target] != url || hasQuit) {
+                return@Runnable
+            }
+            requestMap.remove(target)
+            onThumbnailDownloader(target, bitmap)
+        })
+
     }
 }

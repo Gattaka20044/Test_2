@@ -42,8 +42,8 @@ class NewsFragment : Fragment() {
         newsViewModel = ViewModelProviders.of(this).get(NewsViewModel::class.java)
         val responseHandler = Handler()
         thumbnailDownloader = ThumbnailDownloader(responseHandler) { newsHolder, bitmap ->
-            val drawable = BitmapDrawable(resources, bitmap) as ImageView
-            newsHolder.bindingClass.imageView = BitmapDrawable(resources, bitmap)
+            val drawable = BitmapDrawable(resources, bitmap)
+            newsHolder.bindingClass.imageView.setImageDrawable(drawable)
         }
         lifecycle.addObserver(thumbnailDownloader)
     }
