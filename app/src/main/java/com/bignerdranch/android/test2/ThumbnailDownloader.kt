@@ -15,7 +15,27 @@ private const val TAG = "ThumbnailDownloader"
 private const val MESSAGE_DOWNLOAD = 0
 
 class ThumbnailDownloader<in T>(private val responseHandler: Handler, private val onThumbnailDownloader: (T, Bitmap) -> Unit)
-    : HandlerThread(TAG), LifecycleObserver {
+    : HandlerThread(TAG) {
+
+    val fragmentLifecycleObserver: LifecycleObserver = object : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        fun setup() {
+            start()
+            looper
+        }
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        fun tearDown() {
+            quit()
+        }
+    }
+
+    val viewLifecycleObserver: LifecycleObserver = object : LifecycleObserver {
+        @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        fun clearQueue() {
+            requestHandler.removeMessages(MESSAGE_DOWNLOAD)
+            requestMap.clear()
+        }
+    }
 
     private var hasQuit = false
     private lateinit var requestHandler: Handler
@@ -27,21 +47,7 @@ class ThumbnailDownloader<in T>(private val responseHandler: Handler, private va
         return super.quit()
     }
 
-    @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
-    fun setup() {
-        Log.i(TAG, "starting thread")
-        start()
-        looper
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    fun tearDown() {
-        Log.i(TAG, "destroyig thread")
-        quit()
-    }
-
     fun queueThumbnail(target: T, url: String) {
-        Log.i(TAG, "URL: $url")
         requestMap[target] = url
         requestHandler.obtainMessage(MESSAGE_DOWNLOAD, target).sendToTarget()
 
@@ -54,7 +60,6 @@ class ThumbnailDownloader<in T>(private val responseHandler: Handler, private va
             override fun handleMessage(msg: Message) {
                 if (msg.what == MESSAGE_DOWNLOAD) {
                     val target = msg.obj as T
-                    Log.i(TAG, "Got a request for URL ${requestMap[target]}")
                     handleRequest(target)
                 }
             }

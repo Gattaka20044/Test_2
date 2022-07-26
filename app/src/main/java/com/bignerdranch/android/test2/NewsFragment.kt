@@ -1,5 +1,6 @@
 package com.bignerdranch.android.test2
 
+import android.content.Intent
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.os.Handler
@@ -45,65 +46,88 @@ class NewsFragment : Fragment() {
             val drawable = BitmapDrawable(resources, bitmap)
             newsHolder.bindingClass.imageView.setImageDrawable(drawable)
         }
-        lifecycle.addObserver(thumbnailDownloader)
+        lifecycle.addObserver(thumbnailDownloader.fragmentLifecycleObserver)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-
-        lifecycle.removeObserver(thumbnailDownloader)
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         newsViewModel.newsItemViewModel.observe(
-            viewLifecycleOwner,
-            Observer {
-                //Log.d(TAG, "Have gallery items from ViewModel $it")
+            viewLifecycleOwner, Observer {
+
                 newsRecyclerView.adapter = NewsAdapter(it)
-                // Обновить данные, поддерживающие представление утилизатора
+
             })
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
 
         binding = NewsFragmentBinding.inflate(inflater)
-        //val view = inflater.inflate(R.layout.news_fragment, container, false)
-
         newsRecyclerView = binding.recyclerNews
         newsRecyclerView.layoutManager = LinearLayoutManager(context)
 
         return binding.root
     }
 
-    private class NewsHolder(item: View) : RecyclerView.ViewHolder(item) {
+    private inner class NewsHolder(item: View) : RecyclerView.ViewHolder(item),
+        View.OnClickListener {
+
         val bindingClass = NewsItemBinding.bind(item)
+        private lateinit var newsItem: NewsItem
+
         fun bind(news: NewsItem) = with(bindingClass) {
             title.text = news.title
             author.text = news.author
             data.text = news.data
             description.text = news.description
         }
-        //val bindTitle: (CharSequence) -> Unit = itemTextView::setText
+
+        fun bindNewsItem(item: NewsItem) {
+            newsItem = item
+        }
+
+        override fun onClick(view: View) {
+            val intent = Intent(Intent.ACTION_VIEW, newsItem.pageUri)
+            startActivity(intent)
+        }
+
+        init {
+            item.setOnClickListener(this)
+        }
     }
 
-    private inner class NewsAdapter(private val newsItems: List<NewsItem>) : RecyclerView.Adapter<NewsHolder>() {
+    private inner class NewsAdapter(private val newsItems: List<NewsItem>) :
+        RecyclerView.Adapter<NewsHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NewsHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.news_item, parent, false)
-            //val textView = TextView(parent.context)
+
+            val view =
+                LayoutInflater.from(parent.context).inflate(R.layout.news_item, parent, false)
             return NewsHolder(view)
         }
 
         override fun onBindViewHolder(holder: NewsHolder, position: Int) {
-            holder.bind(newsItems[position])
 
+            holder.bind(newsItems[position])
+            holder.bindNewsItem(newsItems[position])
             thumbnailDownloader.queueThumbnail(holder, newsItems[position].urlToImage)
-        //val newsItem = newsItems[position]
-           // holder.bindTitle(newsItem.title)
         }
 
         override fun getItemCount(): Int = newsItems.size
 
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        viewLifecycleOwner.lifecycle.removeObserver(thumbnailDownloader.viewLifecycleObserver)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        lifecycle.removeObserver(thumbnailDownloader.viewLifecycleObserver)
     }
 
     companion object {
